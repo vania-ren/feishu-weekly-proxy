@@ -4,7 +4,7 @@
 飞书多维表格写入代理 - ChatGPT Actions 中间层
 部署后, ChatGPT 自定义 GPT 通过 Actions 调用本服务, 由本服务写入飞书多维表格。
 """
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx, time, os
@@ -114,9 +114,21 @@ def create_record(body: dict, x_api_key: str = Header(None)):
     return result
 
 
-@app.get("/meta/fetch")
-def meta_fetch(account: str, days: int = 7):
+@app.api_route("/meta/fetch", methods=["GET", "POST"])
+async def meta_fetch(request: Request):
     """拉取 Meta 广告账户近 N 天的 ad set 级数据"""
+    account = request.query_params.get("account", "")
+    days = int(request.query_params.get("days", "7"))
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            account = account or body.get("account", "")
+            days = body.get("days", days)
+    except Exception:
+        pass
+
+    if not account:
+        raise HTTPException(400, "account is required")
     if not META_ACCESS_TOKEN:
         raise HTTPException(500, "META_ACCESS_TOKEN not set")
 
