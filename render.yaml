@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: feishu-weekly-proxy
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: FEISHU_APP_ID
+        value: cli_aa554bd7c3395ce3
+      - key: FEISHU_APP_TOKEN
+        value: O6IfbMyHHaui3HsiiENcgKTPnxb
+      - key: FEISHU_TABLE_ID
+        value: tblptWtO4QTuv4OB
+      - key: PROXY_API_KEY
+        value: weekly2026feishu
+      - key: FEISHU_APP_SECRET
+        sync: false
