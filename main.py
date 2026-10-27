@@ -115,11 +115,8 @@ def create_record(body: dict, x_api_key: str = Header(None)):
 
 
 @app.get("/meta/fetch")
-def meta_fetch(account: str, days: int = 7, api_key: str = "", x_api_key: str = Header(None)):
+def meta_fetch(account: str, days: int = 7):
     """拉取 Meta 广告账户近 N 天的 ad set 级数据"""
-    key = x_api_key or api_key
-    if key != PROXY_API_KEY:
-        raise HTTPException(401, "invalid api key")
     if not META_ACCESS_TOKEN:
         raise HTTPException(500, "META_ACCESS_TOKEN not set")
 
