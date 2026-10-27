@@ -16,6 +16,7 @@ APP_SECRET = os.getenv("FEISHU_APP_SECRET", "")
 APP_TOKEN = os.getenv("FEISHU_APP_TOKEN", "O6IfbMyHHaui3HsiiENcgKTPnxb")
 TABLE_ID = os.getenv("FEISHU_TABLE_ID", "tblptWtO4QTuv4OB")
 PROXY_API_KEY = os.getenv("PROXY_API_KEY", "change-this-to-a-random-string")
+META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN", "")
 
 BASE = "https://open.feishu.cn/open-apis"
 
@@ -111,6 +112,28 @@ def create_record(body: dict, x_api_key: str = Header(None)):
     print(f"[DEBUG] body={body}", flush=True)
     print(f"[DEBUG] feishu_resp={result}", flush=True)
     return result
+
+
+@app.get("/meta/fetch")
+def meta_fetch(account: str, days: int = 7, x_api_key: str = Header(None)):
+    """拉取 Meta 广告账户近 N 天的 ad set 级数据"""
+    if x_api_key != PROXY_API_KEY:
+        raise HTTPException(401, "invalid api key")
+    if not META_ACCESS_TOKEN:
+        raise HTTPException(500, "META_ACCESS_TOKEN not set")
+
+    r = httpx.get(
+        f"https://graph.facebook.com/v26.0/{account}/insights",
+        params={
+            "access_token": META_ACCESS_TOKEN,
+            "fields": "campaign_name,adset_name,reach,frequency,ctr,cpm,impressions,clicks,spend",
+            "level": "adset",
+            "date_preset": f"last_{days}d",
+            "limit": 100,
+        },
+        timeout=30,
+    )
+    return r.json()
 
 
 @app.get("/health")
