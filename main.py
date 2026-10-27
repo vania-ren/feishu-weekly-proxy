@@ -114,9 +114,23 @@ def create_record(body: dict, x_api_key: str = Header(None)):
     return result
 
 
-@app.get("/meta/fetch")
-def meta_fetch(account: str, days: int = 7):
-    """拉取 Meta 广告账户近 N 天的 ad set 级数据"""
+@app.api_route("/meta/fetch", methods=["GET", "POST"])
+async def meta_fetch(request: Request):
+    """拉取 Meta 广告账户近 N 天的 ad set 级数据（兼容 query 和 body 传参）"""
+    # 从 query 读
+    account = request.query_params.get("account", "")
+    days = int(request.query_params.get("days", "7"))
+    # 从 body 读（如果有）
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            account = account or body.get("account", "")
+            days = body.get("days", days)
+    except Exception:
+        pass
+
+    if not account:
+        raise HTTPException(400, "account is required")
     if not META_ACCESS_TOKEN:
         raise HTTPException(500, "META_ACCESS_TOKEN not set")
 
